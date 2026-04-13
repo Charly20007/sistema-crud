@@ -1,10 +1,23 @@
-import { ref } from "vue"
+import { ref, computed } from "vue"
 import { User, UserInput } from "../types/User"
 import { getUsers } from "../services/api";
 
+const users = ref<User[]>([]);
+const searchQuery = ref('');
+
 export const useUsers = () => {
-    const users = ref<User[]>([]);
     const isLoading = ref<boolean>(false);
+
+    const filteredUsers = computed(() => {
+        const query = searchQuery.value.toLowerCase().trim();
+        if (!query) return users.value;
+
+        return users.value.filter(user =>
+            user.name.toLowerCase().includes(query) ||
+            user.username.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query)
+        );
+    });
 
     const fetchUsers = async (): Promise<void> => {
         isLoading.value = true;
@@ -37,6 +50,8 @@ export const useUsers = () => {
 
     return {
         users,
+        filteredUsers,
+        searchQuery,
         isLoading,
         fetchUsers,
         addUser,
