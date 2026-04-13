@@ -100,7 +100,6 @@ const confirmDelete = () => {
           </div>
         </div>
 
-        <!-- Search Bar Card -->
         <div class="premium-card p-8 bg-white lg:max-w-xs w-full flex flex-col justify-center">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Búsqueda Rápida</p>
           <div class="relative group">
@@ -162,7 +161,6 @@ const confirmDelete = () => {
         @cancel="isConfirmOpen = false"
       />
 
-      <!-- Toast Notifications -->
       <div class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
         <TransitionGroup name="toast">
           <BaseToast 
