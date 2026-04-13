@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { watch, computed } from 'vue';
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import * as zod from 'zod';
 import type { User, UserInput } from '../types/User';
 import BaseButton from './ui/BaseButton.vue';
 
@@ -13,52 +16,52 @@ const emit = defineEmits<{
   (e: 'save', user: UserInput): void;
 }>();
 
-const initialState: UserInput = {
-  name: '',
-  username: '',
-  email: '',
-  phone: ''
-};
+const schema = toTypedSchema(
+  zod.object({
+    name: zod.string().min(3, 'El nombre debe tener al menos 3 caracteres').max(50, 'El nombre es demasiado largo'),
+    username: zod.string().min(3, 'El usuario debe tener al menos 3 caracteres').regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, números y guiones bajos'),
+    email: zod.string().min(1, 'El correo es obligatorio').email('Formato de correo inválido'),
+    phone: zod.string().min(5, 'El teléfono debe tener al menos 5 dígitos').regex(/^[+0-9\s-]+$/, 'Formato de teléfono inválido'),
+  })
+);
 
-const formData = ref<UserInput>({ ...initialState });
-const errors = ref({ email: '' });
+const { handleSubmit, errors, defineField, resetForm, setValues } = useForm<UserInput>({
+  validationSchema: schema,
+  initialValues: {
+    name: '',
+    username: '',
+    email: '',
+    phone: ''
+  }
+});
+
+const [name, nameProps] = defineField('name');
+const [username, usernameProps] = defineField('username');
+const [email, emailProps] = defineField('email');
+const [phone, phoneProps] = defineField('phone');
 
 const modalTitle = computed(() => props.userToEdit ? 'Editar Usuario' : 'Nuevo Usuario');
 
-// Vigilamos si cambia el usuario a editar para cargar sus datos
 watch(() => props.userToEdit, (newUser) => {
   if (newUser) {
-    formData.value = { 
+    setValues({
       name: newUser.name,
       username: newUser.username,
       email: newUser.email,
       phone: newUser.phone
-    };
+    });
   } else {
-    formData.value = { ...initialState };
+    resetForm();
   }
 }, { immediate: true });
 
-const validateEmail = (email: string): boolean => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-};
-
-const handleSubmit = (): void => {
-  errors.value.email = '';
-
-  if (!validateEmail(formData.value.email)) {
-    errors.value.email = 'Por favor, ingresa un correo electrónico válido.';
-    return;
-  }
-
-  emit('save', { ...formData.value });
+const onSubmit = handleSubmit((values) => {
+  emit('save', { ...values });
   handleClose();
-};
+});
 
 const handleClose = (): void => {
-  formData.value = { ...initialState };
-  errors.value.email = '';
+  resetForm();
   emit('close');
 };
 </script>
@@ -77,16 +80,23 @@ const handleClose = (): void => {
             </button>
           </div>
 
-          <form @submit.prevent="handleSubmit" class="p-8 space-y-5">
+          <form @submit.prevent="onSubmit" class="p-8 space-y-5">
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Nombre Completo</label>
               <input 
-                v-model="formData.name" 
+                v-model="name" 
+                v-bind="nameProps"
                 type="text" 
                 placeholder="Ej. Juan Pérez"
-                required
                 class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all border p-3 text-slate-900 placeholder-slate-400 outline-none"
+                :class="{'border-red-400 ring-4 ring-red-500/10': errors.name}"
               />
+              <p v-if="errors.name" class="text-red-500 text-xs mt-2 ml-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                {{ errors.name }}
+              </p>
             </div>
 
             <div>
@@ -94,22 +104,29 @@ const handleClose = (): void => {
               <div class="relative">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">@</span>
                 <input 
-                  v-model="formData.username" 
+                  v-model="username" 
+                  v-bind="usernameProps"
                   type="text" 
                   placeholder="usuario123"
-                  required
                   class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all border p-3 pl-8 text-slate-900 placeholder-slate-400 outline-none"
+                  :class="{'border-red-400 ring-4 ring-red-500/10': errors.username}"
                 />
               </div>
+              <p v-if="errors.username" class="text-red-500 text-xs mt-2 ml-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                {{ errors.username }}
+              </p>
             </div>
 
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
               <input 
-                v-model="formData.email" 
-                type="email" 
+                v-model="email" 
+                v-bind="emailProps"
+                type="text" 
                 placeholder="juan@ejemplo.com"
-                required
                 class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all border p-3 text-slate-900 placeholder-slate-400 outline-none"
                 :class="{'border-red-400 ring-4 ring-red-500/10': errors.email}"
               />
@@ -124,12 +141,19 @@ const handleClose = (): void => {
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
               <input 
-                v-model="formData.phone" 
+                v-model="phone" 
+                v-bind="phoneProps"
                 type="text" 
                 placeholder="+54 9 11 1234 5678"
-                required
                 class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all border p-3 text-slate-900 placeholder-slate-400 outline-none"
+                :class="{'border-red-400 ring-4 ring-red-500/10': errors.phone}"
               />
+              <p v-if="errors.phone" class="text-red-500 text-xs mt-2 ml-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                {{ errors.phone }}
+              </p>
             </div>
 
             <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-4 border-t border-slate-50">
