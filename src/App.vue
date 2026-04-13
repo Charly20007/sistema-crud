@@ -64,13 +64,11 @@ const confirmDelete = () => {
     <AppHeader @add-user="openCreateModal" />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grow">
-      <!-- Welcome Section -->
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-slate-900 mb-1">Panel de Control</h2>
         <p class="text-slate-500">Gestiona los usuarios de tu organización de forma sencilla y eficiente.</p>
       </div>
 
-      <!-- Stats Section -->
       <div class="mb-8 flex flex-col lg:flex-row gap-6">
         <div class="premium-card p-8 bg-linear-to-br from-white to-slate-50 relative overflow-hidden group grow">
           <div class="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
@@ -121,7 +119,6 @@ const confirmDelete = () => {
         </div>
       </div>
 
-      <!-- Main Content -->
       <div v-if="isLoading" class="premium-card py-24 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
         <p class="text-slate-600 font-medium">Sincronizando con la red...</p>
