@@ -5,23 +5,24 @@ import UserTable from './components/UserTable.vue';
 import UserModal from './components/UserModal.vue';
 import BaseButton from './components/ui/BaseButton.vue';
 import BaseToast from './components/ui/BaseToast.vue';
+import BaseConfirm from './components/ui/BaseConfirm.vue';
+import AppHeader from './components/layout/AppHeader.vue';
+import AppFooter from './components/layout/AppFooter.vue';
 import { useToasts } from './composables/useToasts';
 import type { User, UserInput } from './types/User';
 
-// 1. Extraemos la lógica del composable
-const { users, isLoading, fetchUsers, addUser, updateUser, deleteUser } = useUsers();
+const { users, filteredUsers, searchQuery, isLoading, fetchUsers, addUser, updateUser, deleteUser } = useUsers();
 const { toasts, addToast, removeToast } = useToasts();
 
-// 2. Estado para controlar el Modal
 const isModalOpen = ref(false);
+const isConfirmOpen = ref(false);
 const selectedUser = ref<User | null>(null);
+const userIdToDelete = ref<number | null>(null);
 
-// 3. Cargar usuarios al montar el componente
 onMounted(() => {
   fetchUsers();
 });
 
-// 4. Funciones de orquestación (Flecha)
 const openCreateModal = () => {
   selectedUser.value = null;
   isModalOpen.value = true;
@@ -44,41 +45,23 @@ const handleSaveUser = (userData: UserInput) => {
 };
 
 const handleDeleteUser = (id: number) => {
-  if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-    deleteUser(id);
+  userIdToDelete.value = id;
+  isConfirmOpen.value = true;
+};
+
+const confirmDelete = () => {
+  if (userIdToDelete.value !== null) {
+    deleteUser(userIdToDelete.value);
     addToast('Usuario eliminado correctamente', 'success');
+    isConfirmOpen.value = false;
+    userIdToDelete.value = null;
   }
 };
 </script>
 
 <template>
   <div class="min-h-screen bg-slate-50 font-sans flex flex-col">
-    <!-- Header / Navbar -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-indigo-200 shadow-lg">U</div>
-            <h1 class="text-xl font-bold tracking-tight text-slate-900">UserNexus</h1>
-          </div>
-          <div class="flex items-center gap-4">
-            <BaseButton 
-              variant="primary"
-              size="md"
-              @click="openCreateModal"
-              class="hidden sm:flex"
-            >
-              <span class="mr-2">+</span> Nuevo Usuario
-            </BaseButton>
-            <button class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <AppHeader @add-user="openCreateModal" />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grow">
       <!-- Welcome Section -->
@@ -88,8 +71,8 @@ const handleDeleteUser = (id: number) => {
       </div>
 
       <!-- Stats Section -->
-      <div class="mb-8">
-        <div class="premium-card p-8 bg-linear-to-br from-white to-slate-50 relative overflow-hidden group">
+      <div class="mb-8 flex flex-col lg:flex-row gap-6">
+        <div class="premium-card p-8 bg-linear-to-br from-white to-slate-50 relative overflow-hidden group grow">
           <div class="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -106,16 +89,34 @@ const handleDeleteUser = (id: number) => {
                 <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total de la Red</p>
                 <div class="flex items-baseline gap-2">
                   <p class="text-4xl font-extrabold text-slate-900 tracking-tight">{{ users.length }}</p>
-                  <p class="text-slate-500 font-medium">Usuarios registrados</p>
+                  <p class="text-slate-500 font-medium">Usuarios</p>
                 </div>
               </div>
             </div>
             <div class="h-px md:h-12 md:w-px bg-slate-200"></div>
             <div class="grow max-w-md">
               <p class="text-sm text-slate-500 leading-relaxed mb-0">
-                Visualización en tiempo real de tu base de datos centralizada. Gestiona permisos y perfiles desde un solo lugar.
+                Visualización en tiempo real de tu base de datos centralizada.
               </p>
             </div>
+          </div>
+        </div>
+
+        <!-- Search Bar Card -->
+        <div class="premium-card p-8 bg-white lg:max-w-xs w-full flex flex-col justify-center">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Búsqueda Rápida</p>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input 
+              v-model="searchQuery"
+              type="text" 
+              placeholder="Buscar por nombre o email..."
+              class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all shadow-inner"
+            >
           </div>
         </div>
       </div>
@@ -138,7 +139,7 @@ const handleDeleteUser = (id: number) => {
             </BaseButton>
         </div>
         <UserTable 
-          :users="users" 
+          :users="filteredUsers" 
           @edit="openEditModal" 
           @delete="handleDeleteUser" 
         />
@@ -156,6 +157,14 @@ const handleDeleteUser = (id: number) => {
         @save="handleSaveUser"
       />
 
+      <BaseConfirm 
+        :is-open="isConfirmOpen"
+        title="¿Eliminar usuario?"
+        message="Esta acción no se puede deshacer. El usuario será borrado permanentemente de la red."
+        @confirm="confirmDelete"
+        @cancel="isConfirmOpen = false"
+      />
+
       <!-- Toast Notifications -->
       <div class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
         <TransitionGroup name="toast">
@@ -170,11 +179,7 @@ const handleDeleteUser = (id: number) => {
       </div>
     </main>
 
-    <footer class="py-8 bg-white border-t border-slate-200 mt-8">
-      <div class="max-w-7xl mx-auto px-4 text-center">
-        <p class="text-slate-400 text-sm">© 2024 UserNexus Dashboard. Todos los derechos reservados.</p>
-      </div>
-    </footer>
+    <AppFooter />
   </div>
 </template>
 

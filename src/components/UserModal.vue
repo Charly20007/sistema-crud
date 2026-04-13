@@ -13,7 +13,6 @@ const emit = defineEmits<{
   (e: 'save', user: UserInput): void;
 }>();
 
-// Estado inicial del formulario
 const initialState: UserInput = {
   name: '',
   username: '',
@@ -24,7 +23,6 @@ const initialState: UserInput = {
 const formData = ref<UserInput>({ ...initialState });
 const errors = ref({ email: '' });
 
-// Título dinámico según la acción
 const modalTitle = computed(() => props.userToEdit ? 'Editar Usuario' : 'Nuevo Usuario');
 
 // Vigilamos si cambia el usuario a editar para cargar sus datos
@@ -41,7 +39,6 @@ watch(() => props.userToEdit, (newUser) => {
   }
 }, { immediate: true });
 
-// Validación de email (Requerimiento Funcional 2.1)
 const validateEmail = (email: string): boolean => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email);

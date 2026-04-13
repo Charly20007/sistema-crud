@@ -6,18 +6,15 @@ const props = defineProps<{
     users: User[];
 }>();
 
-// Definimos los eventos que el componente puede emitir hacia el padre (App.vue)
 const emit = defineEmits<{
     (e: 'edit', user: User): void;
     (e: 'delete', id: number): void;
 }>();
 
-// Función flecha para manejar la edición
 const handleEdit = (user: User): void => {
   emit('edit', user);
 };
 
-// Función flecha para manejar la eliminación
 const handleDelete = (id: number): void => {
   emit('delete', id);
 };
@@ -25,7 +22,6 @@ const handleDelete = (id: number): void => {
 
 <template>
   <div>
-    <!-- Desktop Table (Visible on sm and up) -->
     <div class="premium-card hidden sm:block">
       <table class="w-full text-sm text-left text-slate-600">
         <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
@@ -89,7 +85,6 @@ const handleDelete = (id: number): void => {
       </table>
     </div>
 
-    <!-- Mobile Card View (Visible only on xs screens) -->
     <div class="sm:hidden grid grid-cols-1 gap-4">
       <div 
         v-for="user in users" 
@@ -143,7 +138,6 @@ const handleDelete = (id: number): void => {
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-if="users.length === 0" class="premium-card py-16 text-center text-slate-400">
       <div class="flex flex-col items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
