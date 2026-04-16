@@ -6,7 +6,6 @@ const users = ref<User[]>([]);
 const searchQuery = ref('');
 const STORAGE_KEY = 'sistema_crud_users';
 
-// Sincronización automática con LocalStorage
 watch(users, (newUsers) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newUsers));
 }, { deep: true });
